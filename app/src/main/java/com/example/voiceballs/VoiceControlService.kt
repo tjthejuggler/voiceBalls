@@ -58,7 +58,7 @@ class VoiceControlService : Service() {
             // 2. Download the .ppn file
             // 3. In Android Studio, go to app -> New -> Folder -> Assets Folder
             // 4. Drag your .ppn file into the new 'assets' folder
-            val keywordPath = "your_custom_keyword.ppn" // <-- CHANGE THIS TO YOUR FILENAME
+            val keywordPath = "change-ta_en_android_v3_0_0.ppn" // <-- CHANGE THIS TO YOUR FILENAME
 
             // Initialize Cheetah for speech-to-text
             cheetah = Cheetah.Builder()
