@@ -10,7 +10,9 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 
 class CommandAdapter(
-    private val onDeleteClicked: (String) -> Unit
+    private val onDeleteClicked: (String) -> Unit,
+    private val onEditClicked: (VoiceCommand) -> Unit,
+    private val onPlayClicked: (VoiceCommand) -> Unit
 ) : ListAdapter<VoiceCommand, CommandAdapter.CommandViewHolder>(CommandDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CommandViewHolder {
@@ -25,10 +27,14 @@ class CommandAdapter(
 
     inner class CommandViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val phraseTextView: TextView = itemView.findViewById(R.id.text_command_phrase)
+        private val playButton: Button = itemView.findViewById(R.id.btn_play_command)
+        private val editButton: Button = itemView.findViewById(R.id.btn_edit_command)
         private val deleteButton: Button = itemView.findViewById(R.id.btn_delete_command)
 
         fun bind(command: VoiceCommand) {
             phraseTextView.text = "'${command.phrase}'"
+            playButton.setOnClickListener { onPlayClicked(command) }
+            editButton.setOnClickListener { onEditClicked(command) }
             deleteButton.setOnClickListener { onDeleteClicked(command.phrase) }
         }
     }
