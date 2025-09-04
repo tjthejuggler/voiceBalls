@@ -3,66 +3,97 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:padding="16dp">
+    android:orientation="vertical"
+    android:padding="8dp">
 
-    <View
-        android:id="@+id/view_color"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="@drawable/ball_background" />
-
+    <!-- Ball info line (full width) -->
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_weight="1"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:layout_marginBottom="4dp">
 
         <TextView
             android:id="@+id/text_ip_address"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:textStyle="bold"
-            tools:text="192.168.1.101" />
+            android:textSize="14sp"
+            tools:text="Ball 1: 192.168.1.101" />
 
         <TextView
             android:id="@+id/text_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textSize="12sp"
             tools:text="Connected" />
 
     </LinearLayout>
 
-    <Button
-        android:id="@+id/btn_test_red"
-        android:layout_width="wrap_content"
+    <!-- Controls line (color circle + buttons) -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minWidth="48dp"
-        android:text="R" />
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/btn_test_green"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:minWidth="48dp"
-        android:text="G" />
+        <View
+            android:id="@+id/view_color"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/ball_background" />
 
-    <Button
-        android:id="@+id/btn_test_blue"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:minWidth="48dp"
-        android:text="B" />
+        <Button
+            android:id="@+id/btn_test_red"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="40dp"
+            android:minHeight="36dp"
+            android:text="R"
+            android:textSize="12sp" />
 
-    <Button
-        android:id="@+id/btn_remove"
-        style="?android:attr/buttonBarButtonStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:minWidth="48dp"
-        android:text="X"
-        android:textColor="@android:color/holo_red_dark" />
+        <Button
+            android:id="@+id/btn_test_green"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="40dp"
+            android:minHeight="36dp"
+            android:text="G"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btn_test_blue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="40dp"
+            android:minHeight="36dp"
+            android:text="B"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btn_edit_ip"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="40dp"
+            android:minHeight="36dp"
+            android:text="IP"
+            android:textSize="12sp"
+            android:textColor="@android:color/holo_blue_dark" />
+
+        <Button
+            android:id="@+id/btn_remove"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="40dp"
+            android:minHeight="36dp"
+            android:text="X"
+            android:textSize="12sp"
+            android:textColor="@android:color/holo_red_dark" />
+
+    </LinearLayout>
 
 </LinearLayout>

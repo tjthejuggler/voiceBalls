@@ -78,25 +78,39 @@ object BallController {
         saveBalls()
     }
 
+    fun updateBallIpAddress(ballId: String, ipAddress: String) {
+        val currentBalls = _balls.value.orEmpty()
+        val updatedList = currentBalls.map {
+            if (it.id == ballId) it.copy(ipAddress = ipAddress.takeIf { it.isNotBlank() }) else it
+        }
+        _balls.postValue(updatedList)
+        saveBalls()
+    }
+
     fun changeBallColor(ballId: String, color: Int) {
         val currentBalls = _balls.value.orEmpty()
         val ball = currentBalls.find { it.id == ballId } ?: return
 
-        if (!ball.isVirtual) {
+        // Send UDP command to Lighttrix WiFi ball if IP address is set
+        ball.ipAddress?.let { ip ->
             coroutineScope.launch {
                 try {
-                    // This part will be refactored later to a dedicated networking class
-                    ball.ipAddress?.let { ip ->
-                        DatagramSocket().use { socket ->
-                            val buffer = byteArrayOf(
-                                0x01, // Command: Set Color
-                                Color.red(color).toByte(),
-                                Color.green(color).toByte(),
-                                Color.blue(color).toByte()
-                            )
-                            val packet = DatagramPacket(buffer, buffer.size, InetAddress.getByName(ip), 41412)
-                            socket.send(packet)
-                        }
+                    DatagramSocket().use { socket ->
+                        // Lighttrix WiFi ball protocol: struct.pack("!bIBH", 66, 0, 0, 0) + color data
+                        val udpHeader = ByteArray(8)
+                        udpHeader[0] = 66.toByte()  // Header byte
+                        // Remaining bytes are 0 (int + byte + short = 7 bytes)
+                        
+                        val colorData = byteArrayOf(
+                            0x0a.toByte(), // Color command
+                            (Color.red(color) * 2).toByte(),   // Red * 2
+                            (Color.green(color) * 2).toByte(), // Green * 2
+                            (Color.blue(color) * 2).toByte()   // Blue * 2
+                        )
+                        val buffer = udpHeader + colorData
+                        
+                        val packet = DatagramPacket(buffer, buffer.size, InetAddress.getByName(ip), 41412)
+                        socket.send(packet)
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -109,6 +123,9 @@ object BallController {
             if (it.id == ballId) it.copy(color = color) else it
         }
         _balls.postValue(updatedList)
+        
+        // Save balls after color change to persist the change
+        saveBalls()
     }
 
 }

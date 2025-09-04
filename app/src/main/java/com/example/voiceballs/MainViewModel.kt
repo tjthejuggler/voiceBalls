@@ -26,6 +26,10 @@ class MainViewModel : ViewModel() {
         BallController.changeBallColor(ballId, color)
     }
 
+    fun updateBallIpAddress(ballId: String, ipAddress: String) {
+        BallController.updateBallIpAddress(ballId, ipAddress)
+    }
+
     fun deleteCommand(phrase: String) {
         CommandManager.deleteCommand(phrase)
         loadCommands()

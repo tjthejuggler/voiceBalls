@@ -1,6 +1,6 @@
 # VoiceBalls - Voice-Controlled Juggling Balls
 
-*Last Updated: 2025-09-03 18:12 UTC - SSL Handshake Issue RESOLVED!*
+*Last Updated: 2025-09-04 09:23 UTC - Ball Persistence & IP Editing IMPLEMENTED!*
 
 This Android application allows users to control the color of network-connected juggling balls using voice commands. It features a background service for continuous voice recognition, dynamic ball discovery, and a simple UI for manual control and monitoring.
 
@@ -8,8 +8,10 @@ This Android application allows users to control the color of network-connected 
 
 *   **Offline Voice Control:** Uses Picovoice (Porcupine for wake word, Cheetah for speech-to-text) for a completely offline voice experience.
 *   **Background Service:** The voice recognition runs as a foreground service, allowing the app to listen for commands even when it's not in the foreground.
+*   **Persistent Ball Storage:** Balls and their configurations (including IP addresses) are now saved between app runs.
+*   **IP Address Management:** Edit individual ball IP addresses through the UI with persistent storage.
 *   **Dynamic Ball Discovery:** Scans the local network to discover compatible juggling balls.
-*   **Custom Voice Commands:** (Functionality to add/edit commands is not yet implemented in the UI) The app supports custom phrases to trigger specific color changes.
+*   **Custom Voice Commands:** Add, edit, and delete custom voice commands through the UI.
 *   **Manual Control:** The UI allows users to manually test ball colors and see their connection status.
 
 ## Getting Started
@@ -97,3 +99,43 @@ This Android application allows users to control the color of network-connected 
 4. **local.properties**: Fixed PICOVOICE_ACCESS_KEY format (removed quotes)
 
 **Build Status:** ✅ **BUILD SUCCESSFUL** - All SSL handshake failures resolved, dependencies downloading from Maven Central, compilation successful.
+
+## Recent Updates (2025-09-04)
+
+### Ball Persistence & IP Address Management
+
+**Issues Fixed:**
+1. **Ball Persistence Bug:** Balls were not persisting between app runs due to missing `saveBalls()` call in `changeBallColor()` method
+2. **Missing IP Address Editing:** No UI functionality to set IP addresses for individual balls
+3. **IP Address Display:** Ball adapter was showing ball numbers instead of IP addresses
+
+**Changes Made:**
+1. **BallController.kt:**
+   - Fixed `changeBallColor()` method to call `saveBalls()` after color changes
+   - Added `updateBallIpAddress()` method for IP address management
+   - Enhanced persistence logging for debugging
+
+2. **MainActivity.kt:**
+   - Added `showEditIpDialog()` method for IP address editing
+   - Updated BallAdapter initialization to handle IP editing callbacks
+
+3. **BallAdapter.kt:**
+   - Added IP editing button to ball list items
+   - Updated display logic to show IP addresses alongside ball numbers
+   - Enhanced UI to indicate when balls have no IP address set
+
+4. **MainViewModel.kt:**
+   - Added `updateBallIpAddress()` method to expose IP editing functionality
+
+5. **UI Layout (list_item_ball.xml):**
+   - Added "IP" button for editing individual ball IP addresses
+   - Improved layout to accommodate new functionality
+
+**New Functionality:**
+- ✅ Balls now persist between app runs (colors, IP addresses, all properties)
+- ✅ Click "IP" button on any ball to edit its IP address
+- ✅ IP addresses are saved and remembered between app sessions
+- ✅ Clear visual indication of balls with/without IP addresses
+- ✅ All ball state changes are now properly persisted
+
+**Build Status:** ✅ **BUILD SUCCESSFUL** - All persistence issues resolved, IP editing functionality implemented and tested.

@@ -87,7 +87,8 @@ class MainActivity : AppCompatActivity() {
 
         ballAdapter = BallAdapter(
             onColorChanged = { ballId, color -> viewModel.changeBallColor(ballId, color) },
-            onRemoveClicked = { ballId -> viewModel.removeBall(ballId) }
+            onRemoveClicked = { ballId -> viewModel.removeBall(ballId) },
+            onEditIpClicked = { ballId, currentIp -> showEditIpDialog(ballId, currentIp) }
         )
         ballsRecyclerView.adapter = ballAdapter
         ballsRecyclerView.layoutManager = LinearLayoutManager(this)
@@ -239,6 +240,27 @@ class MainActivity : AppCompatActivity() {
                         viewModel.loadCommands() // Refresh the command list in the UI
                     }
                 }
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showEditIpDialog(ballId: String, currentIp: String?) {
+        val editText = EditText(this).apply {
+            setText(currentIp ?: "")
+            hint = "Enter IP address (e.g., 192.168.1.100)"
+            inputType = android.text.InputType.TYPE_CLASS_TEXT
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Edit Ball IP Address")
+            .setMessage("Enter the IP address for this physical ball:")
+            .setView(editText)
+            .setPositiveButton("Save") { dialog, _ ->
+                val newIp = editText.text.toString().trim()
+                viewModel.updateBallIpAddress(ballId, newIp)
+                Toast.makeText(this, "IP address updated", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
             }
             .setNegativeButton("Cancel", null)

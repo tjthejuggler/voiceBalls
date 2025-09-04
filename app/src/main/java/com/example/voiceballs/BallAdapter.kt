@@ -14,7 +14,8 @@ import androidx.recyclerview.widget.RecyclerView
 
 class BallAdapter(
     private val onColorChanged: (id: String, color: Int) -> Unit,
-    private val onRemoveClicked: (id: String) -> Unit
+    private val onRemoveClicked: (id: String) -> Unit,
+    private val onEditIpClicked: (id: String, currentIp: String?) -> Unit
 ) : ListAdapter<Ball, BallAdapter.BallViewHolder>(BallDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BallViewHolder {
@@ -34,9 +35,15 @@ class BallAdapter(
         private val redButton: Button = itemView.findViewById(R.id.btn_test_red)
         private val greenButton: Button = itemView.findViewById(R.id.btn_test_green)
         private val blueButton: Button = itemView.findViewById(R.id.btn_test_blue)
+        private val editIpButton: Button = itemView.findViewById(R.id.btn_edit_ip)
 
         fun bind(ball: Ball) {
-            ipTextView.text = "Ball: ${ball.number}"
+            // Display IP address or ball number if no IP is set
+            ipTextView.text = if (ball.ipAddress.isNullOrBlank()) {
+                "Ball ${ball.number} (No IP)"
+            } else {
+                "Ball ${ball.number}: ${ball.ipAddress}"
+            }
 
             val background = colorView.background as GradientDrawable
             background.setColor(ball.color)
@@ -52,6 +59,9 @@ class BallAdapter(
             redButton.setOnClickListener { onColorChanged(ball.id, Color.RED) }
             greenButton.setOnClickListener { onColorChanged(ball.id, Color.GREEN) }
             blueButton.setOnClickListener { onColorChanged(ball.id, Color.BLUE) }
+
+            // Handle edit IP button
+            editIpButton.setOnClickListener { onEditIpClicked(ball.id, ball.ipAddress) }
 
             // Handle remove button
             val removeButton: Button = itemView.findViewById(R.id.btn_remove)
