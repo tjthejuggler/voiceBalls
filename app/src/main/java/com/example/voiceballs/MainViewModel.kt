@@ -1,18 +1,33 @@
 package com.example.voiceballs
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 class MainViewModel : ViewModel() {
 
     val balls: LiveData<List<Ball>> = BallController.balls
-    val isScanning: LiveData<Boolean> = BallController.isScanning
+    private val _commands = MutableLiveData<List<VoiceCommand>>()
+    val commands: LiveData<List<VoiceCommand>> = _commands
 
-    fun startScan() {
-        BallController.scanForBalls()
+    fun loadCommands() {
+        _commands.value = CommandManager.getAllCommands()
     }
 
-    fun changeBallColor(ipAddress: String, color: Int) {
-        BallController.changeBallColor(ipAddress, color)
+    fun addVirtualBall() {
+        BallController.addVirtualBall()
+    }
+
+    fun removeBall(ballId: String) {
+        BallController.removeBall(ballId)
+    }
+
+    fun changeBallColor(ballId: String, color: Int) {
+        BallController.changeBallColor(ballId, color)
+    }
+
+    fun deleteCommand(phrase: String) {
+        CommandManager.deleteCommand(phrase)
+        loadCommands()
     }
 }

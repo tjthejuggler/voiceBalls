@@ -13,7 +13,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 
 class BallAdapter(
-    private val onColorTestClicked: (ip: String, color: Int) -> Unit
+    private val onColorChanged: (id: String, color: Int) -> Unit,
+    private val onRemoveClicked: (id: String) -> Unit
 ) : ListAdapter<Ball, BallAdapter.BallViewHolder>(BallDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BallViewHolder {
@@ -35,7 +36,7 @@ class BallAdapter(
         private val blueButton: Button = itemView.findViewById(R.id.btn_test_blue)
 
         fun bind(ball: Ball) {
-            ipTextView.text = "Ball: ${ball.ipAddress}"
+            ipTextView.text = "Ball: ${ball.number}"
 
             val background = colorView.background as GradientDrawable
             background.setColor(ball.color)
@@ -48,17 +49,22 @@ class BallAdapter(
                 statusTextView.setTextColor(ContextCompat.getColor(itemView.context, android.R.color.holo_red_dark))
             }
 
-            redButton.setOnClickListener { onColorTestClicked(ball.ipAddress, Color.RED) }
-            greenButton.setOnClickListener { onColorTestClicked(ball.ipAddress, Color.GREEN) }
-            blueButton.setOnClickListener { onColorTestClicked(ball.ipAddress, Color.BLUE) }
+            redButton.setOnClickListener { onColorChanged(ball.id, Color.RED) }
+            greenButton.setOnClickListener { onColorChanged(ball.id, Color.GREEN) }
+            blueButton.setOnClickListener { onColorChanged(ball.id, Color.BLUE) }
+
+            // Handle remove button
+            val removeButton: Button = itemView.findViewById(R.id.btn_remove)
+            removeButton.setOnClickListener { onRemoveClicked(ball.id) }
         }
     }
 }
 
 class BallDiffCallback : DiffUtil.ItemCallback<Ball>() {
     override fun areItemsTheSame(oldItem: Ball, newItem: Ball): Boolean {
-        return oldItem.ipAddress == newItem.ipAddress
+        return oldItem.id == newItem.id
     }
+
     override fun areContentsTheSame(oldItem: Ball, newItem: Ball): Boolean {
         return oldItem == newItem
     }

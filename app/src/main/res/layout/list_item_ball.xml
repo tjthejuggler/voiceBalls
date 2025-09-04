@@ -56,4 +56,13 @@
         android:minWidth="48dp"
         android:text="B" />
 
+    <Button
+        android:id="@+id/btn_remove"
+        style="?android:attr/buttonBarButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="48dp"
+        android:text="X"
+        android:textColor="@android:color/holo_red_dark" />
+
 </LinearLayout>

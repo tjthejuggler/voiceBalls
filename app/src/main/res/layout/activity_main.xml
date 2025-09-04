@@ -34,36 +34,47 @@
 
     </LinearLayout>
 
-    <Button
-        android:id="@+id/btn_scan"
+    <TextView
+        android:id="@+id/text_voice_status"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
-        android:text="Scan for Balls"
+        android:gravity="center"
+        android:text="Voice Service Stopped"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/button_bar" />
 
-    <ProgressBar
-        android:id="@+id/progress_bar"
-        android:layout_width="wrap_content"
+    <Button
+        android:id="@+id/btn_add_ball"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@id/btn_scan"
-        app:layout_constraintEnd_toEndOf="@id/btn_scan"
-        app:layout_constraintTop_toTopOf="@id/btn_scan"
-        tools:visibility="visible" />
+        android:layout_margin="8dp"
+        android:text="Add Virtual Ball"
+        app:layout_constraintEnd_toStartOf="@+id/btn_add_command"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_voice_status" />
+
+    <Button
+        android:id="@+id/btn_add_command"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:text="Add Command"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btn_add_ball"
+        app:layout_constraintTop_toBottomOf="@id/text_voice_status" />
 
     <TextView
         android:id="@+id/header_balls"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:text="Discovered Balls:"
+        android:text="Virtual Balls:"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btn_scan" />
+        app:layout_constraintTop_toBottomOf="@id/btn_add_ball" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_balls"
@@ -75,5 +86,26 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/header_balls"
         tools:listitem="@layout/list_item_ball" />
+
+    <TextView
+        android:id="@+id/header_commands"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="Voice Commands:"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/recycler_view_balls" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view_commands"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header_commands"
+        tools:listitem="@layout/list_item_command" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

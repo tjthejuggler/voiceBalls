@@ -79,10 +79,14 @@ dependencies {
     // For Picovoice (Wake Word and Speech-to-Text) - Using versions available on Maven Central
     implementation("ai.picovoice:porcupine-android:3.0.3")
     implementation("ai.picovoice:cheetah-android:1.1.1")
+    implementation("ai.picovoice:android-voice-processor:1.0.2")
 
     // For RecyclerView (displaying lists)
     implementation("androidx.recyclerview:recyclerview:1.3.2")
 
     // For easy SharedPreferences access
     implementation("androidx.preference:preference-ktx:1.2.1")
+
+    // For JSON serialization/deserialization
+    implementation("com.google.code.gson:gson:2.10.1")
 }
