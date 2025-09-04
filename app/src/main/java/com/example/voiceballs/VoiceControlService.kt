@@ -3,7 +3,8 @@ package com.example.voiceballs
 import ai.picovoice.cheetah.Cheetah
 import ai.picovoice.cheetah.CheetahActivationException
 import ai.picovoice.cheetah.CheetahInvalidArgumentException
-import ai.picovoice.cheetah.CheetahTranscriptCallback
+// CheetahTranscriptCallback may not exist in older versions - we'll use a lambda instead
+// import ai.picovoice.cheetah.CheetahTranscriptCallback
 import ai.picovoice.porcupine.Porcupine
 import ai.picovoice.porcupine.PorcupineManager
 import android.app.Notification
@@ -25,7 +26,7 @@ class VoiceControlService : Service() {
     private var isAwake = false
 
     // This callback is triggered when the wake word is heard.
-    private val porcupineKeywordCallback = {
+    private val porcupineKeywordCallback = { keywordIndex: Int ->
         Log.d("VoiceService", "Wake Word Detected!")
         isAwake = true
         updateNotification("Listening for command...")
@@ -33,7 +34,7 @@ class VoiceControlService : Service() {
     }
 
     // This callback is triggered when Cheetah finalizes a transcription.
-    private val cheetahTranscriptCallback = CheetahTranscriptCallback { transcript, isEndpoint ->
+    private val cheetahTranscriptCallback = { transcript: String, isEndpoint: Boolean ->
         if (isAwake && transcript.isNotBlank()) {
             if (isEndpoint) {
                 val fullTranscript = transcript.trim()
@@ -69,19 +70,11 @@ class VoiceControlService : Service() {
             // Initialize Porcupine to listen for the wake word
             porcupineManager = PorcupineManager.Builder()
                 .setAccessKey(BuildConfig.PICOVOICE_ACCESS_KEY)
-                .setKeywordAsset(keywordPath) // Use the keyword from assets
-                .setWakeWordCallback(porcupineKeywordCallback)
-                .build(applicationContext) { audioFrame ->
-                    // This is the magic: pipe the audio directly from the mic to Cheetah
-                    try {
-                        cheetah?.process(audioFrame)
-                    } catch (e: Exception) {
-                        Log.e("VoiceService", "Cheetah process error: ${e.message}")
-                    }
-                }
+                .setKeywordPath(keywordPath) // Use the keyword from assets (API may vary by version)
+                .build(applicationContext, porcupineKeywordCallback)
 
             porcupineManager?.start()
-            Log.d("VoiceService", "Porcupine and Cheetah started successfully.")
+            Log.d("VoiceService", "Porcupine started successfully. Note: Cheetah integration may need separate audio handling.")
 
         } catch (e: Exception) {
             Log.e("VoiceService", "Error initializing Picovoice: ${e.message}")

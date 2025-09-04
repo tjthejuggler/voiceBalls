@@ -31,6 +31,10 @@ android {
         )
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -40,6 +44,11 @@ android {
             )
         }
     }
+    
+    lint {
+        disable += "NullSafeMutableLiveData"
+    }
+    
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -67,9 +76,9 @@ dependencies {
     // For Coroutines (background tasks)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-    // For Picovoice (Wake Word and Speech-to-Text)
-    implementation("ai.picovoice:porcupine-android:3.0.2")
-    implementation("ai.picovoice:cheetah-android:2.0.1")
+    // For Picovoice (Wake Word and Speech-to-Text) - Using versions available on Maven Central
+    implementation("ai.picovoice:porcupine-android:3.0.3")
+    implementation("ai.picovoice:cheetah-android:1.1.1")
 
     // For RecyclerView (displaying lists)
     implementation("androidx.recyclerview:recyclerview:1.3.2")

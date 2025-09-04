@@ -86,7 +86,9 @@ object BallController {
                     val updatedList = _balls.value?.map {
                         if (it.ipAddress == ipAddress) it.copy(color = color) else it
                     }
-                    _balls.postValue(updatedList)
+                    if (updatedList != null) {
+                        _balls.postValue(updatedList)
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -128,8 +130,10 @@ object BallController {
                 for (addr in addrs) {
                     if (!addr.isLoopbackAddress) {
                         val sAddr = addr.hostAddress
-                        val isIPv4 = sAddr.indexOf(':') < 0
-                        if (isIPv4) return sAddr
+                        if (sAddr != null) {
+                            val isIPv4 = sAddr.indexOf(':') < 0
+                            if (isIPv4) return sAddr
+                        }
                     }
                 }
             }

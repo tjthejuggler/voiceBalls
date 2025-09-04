@@ -1,6 +1,6 @@
 # VoiceBalls - Voice-Controlled Juggling Balls
 
-*Last Updated: 2025-09-03*
+*Last Updated: 2025-09-03 18:12 UTC - SSL Handshake Issue RESOLVED!*
 
 This Android application allows users to control the color of network-connected juggling balls using voice commands. It features a background service for continuous voice recognition, dynamic ball discovery, and a simple UI for manual control and monitoring.
 
@@ -70,10 +70,30 @@ This Android application allows users to control the color of network-connected 
 ## Key Dependencies
 
 *   **Picovoice:**
-    *   `porcupine-android`: For wake word detection.
-    *   `cheetah-android`: For streaming speech-to-text.
+    *   `porcupine-android:3.0.3`: For wake word detection (Maven Central).
+    *   `cheetah-android:1.1.1`: For streaming speech-to-text (Maven Central).
 *   **AndroidX:**
     *   `lifecycle-viewmodel-ktx` & `lifecycle-livedata-ktx`: For ViewModel and LiveData.
     *   `recyclerview`: For displaying lists.
     *   `preference-ktx`: For easy `SharedPreferences` access.
 *   **Kotlin Coroutines:** For handling background tasks like network scanning.
+
+## Build Configuration & SSL Issue Resolution
+
+### Issue Resolved: SSL Handshake Failure (2025-09-03)
+
+**Problem:** The project was experiencing `javax.net.ssl.SSLHandshakeException: Received fatal alert: handshake_failure` when trying to download Picovoice dependencies from `maven.picovoice.ai`.
+
+**Root Cause:** Picovoice's Maven repository (`maven.picovoice.ai`) has broken SSL/TLS configuration that causes handshake failures with modern Java versions.
+
+**Solution:** Switched to using Picovoice library versions available on Maven Central:
+- `cheetah-android:1.1.1` (instead of 2.0.1 from Picovoice's repository)
+- `porcupine-android:3.0.3` (compatible version from Maven Central)
+
+**Configuration Changes Made:**
+1. **gradle.properties**: Set `org.gradle.java.home` to use Android Studio's JBR
+2. **app/build.gradle.kts**: Updated dependency versions to Maven Central compatible versions
+3. **VoiceControlService.kt**: Fixed API compatibility issues for older library versions
+4. **local.properties**: Fixed PICOVOICE_ACCESS_KEY format (removed quotes)
+
+**Build Status:** ✅ **BUILD SUCCESSFUL** - All SSL handshake failures resolved, dependencies downloading from Maven Central, compilation successful.

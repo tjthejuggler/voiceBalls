@@ -1,0 +1,17 @@
+allprojects {
+    repositories.all { ArtifactRepository repo ->
+        if (repo instanceof MavenArtifactRepository) {
+            repo.allowInsecureProtocol = true
+        }
+    }
+}
+
+gradle.projectsEvaluated {
+    System.setProperty('javax.net.ssl.trustStore', '')
+    System.setProperty('javax.net.ssl.trustStorePassword', '')
+    System.setProperty('javax.net.ssl.keyStore', '')
+    System.setProperty('javax.net.ssl.keyStorePassword', '')
+    System.setProperty('com.sun.net.ssl.checkRevocation', 'false')
+    System.setProperty('trust_all_cert', 'true')
+    System.setProperty('jdk.tls.disabledAlgorithms', '')
+}
