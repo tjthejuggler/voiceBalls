@@ -302,12 +302,14 @@ class MainActivity : AppCompatActivity() {
     private fun startVoiceService() {
         val serviceIntent = Intent(this, VoiceControlService::class.java)
         ContextCompat.startForegroundService(this, serviceIntent)
+        statusTextView.text = "Voice service started"
         Toast.makeText(this, "Voice service started.", Toast.LENGTH_SHORT).show()
     }
 
     private fun stopVoiceService() {
         val serviceIntent = Intent(this, VoiceControlService::class.java)
         stopService(serviceIntent)
+        statusTextView.text = "Voice service stopped"
         Toast.makeText(this, "Voice service stopped.", Toast.LENGTH_SHORT).show()
     }
 

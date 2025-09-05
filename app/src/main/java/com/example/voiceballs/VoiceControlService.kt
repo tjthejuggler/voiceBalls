@@ -1,12 +1,5 @@
 package com.example.voiceballs
 
-import ai.picovoice.cheetah.Cheetah
-import ai.picovoice.cheetah.CheetahActivationException
-import ai.picovoice.cheetah.CheetahInvalidArgumentException
-import ai.picovoice.porcupine.Porcupine
-import ai.picovoice.android.voiceprocessor.VoiceProcessor
-import ai.picovoice.android.voiceprocessor.VoiceProcessorFrameListener
-import kotlinx.coroutines.*
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -16,85 +9,159 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.example.voiceballs.BuildConfig
+import edu.cmu.pocketsphinx.Assets
+import edu.cmu.pocketsphinx.Hypothesis
+import edu.cmu.pocketsphinx.RecognitionListener
+import edu.cmu.pocketsphinx.SpeechRecognizer
+import edu.cmu.pocketsphinx.SpeechRecognizerSetup
+import kotlinx.coroutines.*
 import java.io.File
+import java.io.IOException
 
 class VoiceControlService : Service() {
 
-    private var porcupine: Porcupine? = null
-    private var cheetah: Cheetah? = null
-    private var voiceProcessor: VoiceProcessor? = null
-    private var isAwake = false
+    private var wakeWordRecognizer: SpeechRecognizer? = null
+    private var commandRecognizer: SpeechRecognizer? = null
+    private val scope = CoroutineScope(Dispatchers.IO)
 
+    private val wakeWord = "hey computer"
+    private val wakeWordSearch = "WAKE_WORD"
+    private val commandSearch = "COMMAND"
 
     override fun onCreate() {
         super.onCreate()
-
-        // Promote the service to the foreground immediately.
         val notification = createNotification("Initializing voice control...")
         startForeground(NOTIFICATION_ID, notification)
 
         CommandManager.init(this)
-        startVoiceRecognition()
+        scope.launch {
+            try {
+                setupRecognizers()
+            } catch (e: Exception) {
+                Log.e("VoiceControlLogger", "Error setting up recognizers: ${e.message}", e)
+                stopSelf()
+            }
+        }
     }
 
-    private fun startVoiceRecognition() {
-        try {
-            val keywordPath = "change-ta_en_android_v3_0_0.ppn"
+    private suspend fun setupRecognizers() {
+        withContext(Dispatchers.IO) {
+            val assets = Assets(applicationContext)
+            val assetDir = assets.syncAssets()
+            val commonSetup = SpeechRecognizerSetup.defaultSetup()
+                .setAcousticModel(File(assetDir, "en-us-ptm"))
+                .setDictionary(File(assetDir, "cmudict-en-us.dict"))
 
-            porcupine = Porcupine.Builder()
-                .setAccessKey(BuildConfig.PICOVOICE_ACCESS_KEY)
-                .setKeywordPath(keywordPath)
-                .build(applicationContext)
+            // 1. Wake Word Recognizer (less strict)
+            wakeWordRecognizer = commonSetup.recognizer
+            wakeWordRecognizer?.addListener(wakeWordListener)
+            wakeWordRecognizer?.addKeyphraseSearch(wakeWordSearch, wakeWord)
 
-            cheetah = Cheetah.Builder()
-                .setAccessKey(BuildConfig.PICOVOICE_ACCESS_KEY)
-                .setEnableAutomaticPunctuation(true)
-                .build(applicationContext)
+            // 2. Command Recognizer (more strict)
+            commonSetup.setFloat("-lw", 10.0)
+            commonSetup.setFloat("-wip", 0.2)
+            commandRecognizer = commonSetup.recognizer
+            commandRecognizer?.addListener(commandListener)
+            val grammarFile = createGrammarFile(CommandManager.getAllCommands())
+            commandRecognizer?.addGrammarSearch(commandSearch, grammarFile)
 
-            voiceProcessor = VoiceProcessor.getInstance()
-            voiceProcessor?.addFrameListener(voiceProcessorFrameListener)
-            voiceProcessor?.start(porcupine!!.frameLength, porcupine!!.sampleRate)
+            startWakeWordRecognition()
+            Log.i("VoiceControlLogger", "Recognizers setup complete.")
+        }
+    }
 
-        } catch (e: Exception) {
-            Log.e("VoiceService", "Error initializing Picovoice: ${e.message}")
-            stopSelf()
+    private fun startWakeWordRecognition() {
+        commandRecognizer?.stop()
+        wakeWordRecognizer?.startListening(wakeWordSearch)
+        Log.i("VoiceControlLogger", "Listening for wake word...")
+        updateNotification("Listening for wake word...")
+        broadcastStatus("Listening for wake word...")
+    }
+
+    private fun startCommandRecognition() {
+        wakeWordRecognizer?.stop()
+        commandRecognizer?.startListening(commandSearch, 20000)
+        Log.i("VoiceControlLogger", "Wake word detected! Listening for command...")
+        updateNotification("Listening for command...")
+        broadcastStatus("Wake word detected! Listening for command...")
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return START_STICKY
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        scope.cancel()
+        wakeWordRecognizer?.cancel()
+        wakeWordRecognizer?.shutdown()
+        commandRecognizer?.cancel()
+        commandRecognizer?.shutdown()
+        Log.i("VoiceControlLogger", "Service destroyed.")
+        stopForeground(true)
+    }
+
+    private val wakeWordListener = object : RecognitionListener {
+        override fun onBeginningOfSpeech() {}
+        override fun onEndOfSpeech() {}
+        override fun onPartialResult(hypothesis: Hypothesis?) {
+            if (hypothesis?.hypstr == wakeWord) {
+                startCommandRecognition()
+            }
+        }
+        override fun onResult(hypothesis: Hypothesis?) {}
+        override fun onError(error: Exception) {
+            Log.e("VoiceControlLogger", "Wake word error", error)
+        }
+        override fun onTimeout() {}
+    }
+
+    private val commandListener = object : RecognitionListener {
+        override fun onBeginningOfSpeech() {}
+        override fun onEndOfSpeech() {
+            commandRecognizer?.stop()
+            broadcastStatus("Processing command...")
+            updateNotification("Processing command...")
+        }
+        override fun onPartialResult(hypothesis: Hypothesis?) {}
+        override fun onResult(hypothesis: Hypothesis?) {
+            val commandText = hypothesis?.hypstr
+            if (!commandText.isNullOrBlank()) {
+                processCommand(commandText)
+            }
+            startWakeWordRecognition()
+        }
+        override fun onError(error: Exception) {
+            Log.e("VoiceControlLogger", "Command recognition error", error)
+            startWakeWordRecognition()
+        }
+        override fun onTimeout() {
+            Log.d("VoiceControlLogger", "Command listening timeout.")
+            startWakeWordRecognition()
         }
     }
 
     private fun processCommand(commandText: String) {
+        Log.i("VoiceControlLogger", "Recognized command: '$commandText'")
         val command = CommandManager.findCommand(commandText)
         if (command != null) {
             command.actions.forEach { action ->
                 BallController.changeBallColor(action.ballId, action.color)
             }
-            Log.i("VoiceService", "Executed command for phrase: '${command.phrase}'")
+            Log.i("VoiceControlLogger", "Executed command for phrase: '${command.phrase}'")
         } else {
-            Log.w("VoiceService", "No command found for phrase: '$commandText'")
+            Log.w("VoiceControlLogger", "No command found for phrase: '$commandText'")
         }
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // The service is already in the foreground.
-        // We can update the notification text if needed.
-        updateNotification("Listening for wake word...")
-        broadcastStatus("Listening for wake word...")
-        return START_STICKY
-    }
+    // --- Boilerplate ---
+    override fun onBind(intent: Intent?): IBinder? = null
 
-    override fun onDestroy() {
-        voiceProcessor?.stop()
-        voiceProcessor?.removeFrameListener(voiceProcessorFrameListener)
-        porcupine?.delete()
-        cheetah?.delete()
-        broadcastStatus("Service stopped")
-        super.onDestroy()
-    }
-
-    private fun updateNotification(text: String) {
-        val notification = createNotification(text)
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(NOTIFICATION_ID, notification)
+    private fun broadcastStatus(status: String) {
+        val intent = Intent(ACTION_STATUS_UPDATE).apply {
+            putExtra(EXTRA_STATUS, status)
+        }
+        sendBroadcast(intent)
     }
 
     private fun createNotification(contentText: String): Notification {
@@ -111,45 +178,37 @@ class VoiceControlService : Service() {
         return NotificationCompat.Builder(this, channelId)
             .setContentTitle("Juggler Voice Control")
             .setContentText(contentText)
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // Default icon
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOngoing(true)
             .build()
     }
 
-    override fun onBind(intent: Intent?): IBinder? = null
-
-    private val voiceProcessorFrameListener = VoiceProcessorFrameListener { frame ->
-        if (isAwake) {
-            val result = cheetah?.process(frame)
-            if (result != null && result.transcript.isNotBlank()) {
-                if (result.isEndpoint) {
-                    val fullTranscript = result.transcript.trim()
-                    Log.d("VoiceService", "Command received: $fullTranscript")
-                    processCommand(fullTranscript)
-                    isAwake = false
-                    broadcastStatus("Listening for wake word...")
-                }
-            }
-        } else {
-            val keywordIndex = porcupine?.process(frame)
-            if (keywordIndex != null && keywordIndex >= 0) {
-                Log.d("VoiceService", "Wake Word Detected!")
-                isAwake = true
-                broadcastStatus("Wake word detected")
-            }
-        }
-    }
-
-    private fun broadcastStatus(status: String) {
-        val intent = Intent(ACTION_STATUS_UPDATE).apply {
-            putExtra(EXTRA_STATUS, status)
-        }
-        sendBroadcast(intent)
+    private fun updateNotification(text: String) {
+        val notification = createNotification(text)
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
     companion object {
         const val ACTION_STATUS_UPDATE = "com.example.voiceballs.ACTION_STATUS_UPDATE"
         const val EXTRA_STATUS = "com.example.voiceballs.EXTRA_STATUS"
         private const val NOTIFICATION_ID = 1337
+    }
+
+    @Throws(IOException::class)
+    private fun createGrammarFile(commands: List<VoiceCommand>): File {
+        val grammarFile = File(applicationContext.filesDir, "commands.gram")
+        grammarFile.writer().use { writer ->
+            writer.write("#JSGF V1.0;\n\n")
+            writer.write("grammar commands;\n\n")
+            if (commands.isEmpty()) {
+                writer.write("public <command> = no valid commands available;\n")
+            } else {
+                val commandPhrases = commands.joinToString(" | ") { it.phrase }
+                writer.write("public <command> = ( $commandPhrases );\n")
+            }
+        }
+        Log.d("VoiceControlLogger", "Generated grammar file with ${commands.size} commands.")
+        return grammarFile
     }
 }

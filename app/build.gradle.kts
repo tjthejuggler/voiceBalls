@@ -77,9 +77,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     // For Picovoice (Wake Word and Speech-to-Text) - Using versions available on Maven Central
-    implementation("ai.picovoice:porcupine-android:3.0.3")
-    implementation("ai.picovoice:cheetah-android:1.1.1")
-    implementation("ai.picovoice:android-voice-processor:1.0.2")
+    // PocketSphinx for offline speech recognition (local AAR)
+    implementation(files("libs/pocketsphinx-android-5prealpha-release.aar"))
 
     // For RecyclerView (displaying lists)
     implementation("androidx.recyclerview:recyclerview:1.3.2")
